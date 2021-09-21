@@ -12,19 +12,6 @@ classNames = []
 with open(classFile, 'rt') as f:
     classNames = f.read().rstrip('\n').split('\n')
 
-
-def empty(a):
-    pass
-
-"create track bar always this values statr from zero"
-# windowName = "TrackBars"
-# cv2.namedWindow(windowName)
-# cv2.resizeWindow(windowName, 640, 240)
-# cv2.createTrackbar("cx", windowName, 0, 1000, empty)
-# cv2.createTrackbar("cy", windowName, 0, 1000, empty)
-# cv2.createTrackbar("h", windowName, 0, 1000, empty)
-# cv2.createTrackbar("w", windowName, 0, 1000, empty)
-
 modelConfiguration = "C:\personal\yoloV3\yolo\yolov3_608.cfg"
 modelWeight = "C:\personal\yoloV3\yolo\yolov3_608.weights"
 
@@ -64,24 +51,13 @@ def findObjects(outputs, img):
             x, y, w, h = box[0], box[1], box[2], box[3]
             dets.append([x, y, x + w, y + h])
             cv2.circle(img, (x + w, y + h), 4, (0, 255, 255), 2)
-            # cv2.circle(img, (350, 350), 4, (0, 255, 255), 2)
-
             # bbox on car
-            cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 255), 2)
-            # text = f'{classNames[classIds[i]].upper()}{int(confs[i]*100)}{count}%'
-            # if y+h >= 160 and y+h <= 180:
-            #     count += 1
-                # bbox on car
             cv2.rectangle(img, (x, y), (x + w, y + h), (120, 0, 255), 2)
-            if y+h <= 160:
-                # count only show after cross the line
-                text = f'{count}'
-                cv2.putText(img, text, (x+10, y+30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            text = f'{count}'
+            cv2.putText(img, text, (x+10, y+30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-    # print(dets)
     if len(dets) > 0:
         dets = np.asarray(dets)
-        # print(dets)
         tracks = tracker.update(dets)
         if len(tracks) > 0:
             count = int(tracks[0][4])
@@ -89,10 +65,6 @@ def findObjects(outputs, img):
 
 
 def createBoxToCount(img):
-    # cx = cv2.getTrackbarPos("cx", windowName)
-    # cy = cv2.getTrackbarPos("cy", windowName)
-    # h = cv2.getTrackbarPos("h", windowName)
-    # w = cv2.getTrackbarPos("w", windowName)
     cx, cy, h, w = 166, 104, 698, 350
     cv2.rectangle(img, (cx, cy), (cx+h, cy+w), (0, 255, 0), 3)
     # cv2.line(img, (cx, cy), (cx+h, cy), (0, 0, 255), 3)
