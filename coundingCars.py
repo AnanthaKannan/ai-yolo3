@@ -6,7 +6,10 @@ wht = 608
 confThreshold = 0.5
 nmsThreshold = 0.3
 tracker = Sort()
+memory = {}
+count = 0
 
+line = [(0, 190), (700, 190)]
 classFile = 'yolo/coco.names'
 classNames = []
 with open(classFile, 'rt') as f:
@@ -19,13 +22,20 @@ net = cv2.dnn.readNetFromDarknet(modelConfiguration, modelWeight)
 net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
 net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
 
-count = 0
+
+# Return true if line segments AB and CD intersect
+def intersect(A,B,C,D):
+	return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D)
+
+def ccw(A,B,C):
+	return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
+
+
 def findObjects(outputs, img):
     ht, wt, ct = img.shape
     bbox = []
     classIds = []
     confs = []
-    global count
     cv2.line(img, (0, 160), (698, 160), (255, 0, 255), 2)
     cv2.line(img, (0, 180), (698, 180), (255, 0, 0), 2)
     # print('count', count)
@@ -50,19 +60,32 @@ def findObjects(outputs, img):
             box = bbox[i]
             x, y, w, h = box[0], box[1], box[2], box[3]
             dets.append([x, y, x + w, y + h])
-            cv2.circle(img, (x + w, y + h), 4, (0, 255, 255), 2)
-            # bbox on car
-            cv2.rectangle(img, (x, y), (x + w, y + h), (120, 0, 255), 2)
-            text = f'{count}'
-            cv2.putText(img, text, (x+10, y+30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+    bbox = []
+    indexIDs = []
+    global memory
+    previous = memory.copy()
+    memory = {}
 
     if len(dets) > 0:
         dets = np.asarray(dets)
         tracks = tracker.update(dets)
         if len(tracks) > 0:
             count = int(tracks[0][4])
-            print(tracks[0][4])
+        for track in tracks:
+            print('track', track)
+            bbox.append([track[0], track[1], track[2], track[3]])
+            indexIDs.append(int(track[4]))
+            memory[indexIDs[-1]] = bbox[-1]
+        if len(bbox) > 0:
+            i = int(0)
+            for box in bbox:
+                (x, y, w, h) = (int(box[0]), int(box[1]), int(box[2]), int(box[3]))
+                cv2.rectangle(img, (x, y), (x + w, y + h), (120, 0, 255), 2)
 
+                text = "{}".format(indexIDs[i])
+                cv2.putText(img, text, (x, y + 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
+                i += 1
 
 def createBoxToCount(img):
     cx, cy, h, w = 166, 104, 698, 350
