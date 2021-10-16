@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+/__pycache__
+yolov3.cgf
+yolov3.weights
+*.mp4
+/.idea
